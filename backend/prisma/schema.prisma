@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Plan {
+  id          Int          @id @default(autoincrement())
+  name        String
+  level       Int          @unique
+  price       Float
+  currency    String       @default("USD")
+  isActive    Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+
+  users       User[]
+  sections    Section[]
+  subSections SubSection[]
+  questions   Question[]
+}
+
+model User {
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  passwordHash  String
+  name          String
+  planId        Int            @default(1)
+  planExpiresAt DateTime?
+  createdAt     DateTime       @default(now())
+
+  plan          Plan           @relation(fields: [planId], references: [id])
+  attempts      Attempt[]
+  subscriptions Subscription[]
+  refreshTokens RefreshToken[]
+}
+
+model RefreshToken {
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Section {
+  id                Int          @id @default(autoincrement())
+  name              String
+  order             Int
+  requiredPlanLevel Int          @default(1)
+  createdAt         DateTime     @default(now())
+
+  plan        Plan         @relation(fields: [requiredPlanLevel], references: [level])
+  subSections SubSection[]
+}
+
+model SubSection {
+  id                Int        @id @default(autoincrement())
+  name              String
+  order             Int
+  sectionId         Int
+  requiredPlanLevel Int        @default(1)
+  createdAt         DateTime   @default(now())
+
+  section   Section    @relation(fields: [sectionId], references: [id])
+  plan      Plan       @relation(fields: [requiredPlanLevel], references: [level])
+  questions Question[]
+}
+
+model Question {
+  id                Int      @id @default(autoincrement())
+  text              String
+  imageUrl          String?
+  explanation       String
+  subSectionId      Int
+  requiredPlanLevel Int      @default(1)
+  createdAt         DateTime @default(now())
+
+  subSection SubSection @relation(fields: [subSectionId], references: [id])
+  plan       Plan       @relation(fields: [requiredPlanLevel], references: [level])
+  choices    Choice[]
+  attempts   Attempt[]
+}
+
+model Choice {
+  id         Int     @id @default(autoincrement())
+  questionId Int
+  text       String
+  isCorrect  Boolean @default(false)
+
+  question Question  @relation(fields: [questionId], references: [id])
+  attempts Attempt[]
+}
+
+model Attempt {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  questionId       Int
+  selectedChoiceId Int
+  isCorrect        Boolean
+  answeredAt       DateTime @default(now())
+
+  user           User     @relation(fields: [userId], references: [id])
+  question       Question @relation(fields: [questionId], references: [id])
+  selectedChoice Choice   @relation(fields: [selectedChoiceId], references: [id])
+}
+
+model ActivationCode {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique
+  planLevel    Int
+  durationDays Int
+  isUsed       Boolean   @default(false)
+  expiresAt    DateTime?
+  usedByUserId Int?
+  usedAt       DateTime?
+  createdAt    DateTime  @default(now())
+
+  subscription Subscription?
+}
+
+model Subscription {
+  id               Int      @id @default(autoincrement())
+  userId           Int
+  planLevel        Int
+  startDate        DateTime @default(now())
+  endDate          DateTime
+  activationCodeId Int?     @unique
+
+  user           User            @relation(fields: [userId], references: [id])
+  activationCode ActivationCode? @relation(fields: [activationCodeId], references: [id])
+}
