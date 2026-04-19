@@ -15,6 +15,9 @@ require('./utils/cron')
 
 const app = express()
 
+const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS) || 1
+app.set('trust proxy', trustProxyHops)
+
 const corsOptions = {
   origin: process.env.ALLOWED_ORIGINS === '*' || !process.env.ALLOWED_ORIGINS
     ? true
@@ -25,6 +28,18 @@ app.use(express.json({ limit: '10kb' }))
 
 app.get('/health', (req, res) => {
   res.json({ data: { status: 'ok' }, message: 'Server is running' })
+})
+
+app.get('/whoami', (req, res) => {
+  const info = {
+    ip: req.ip,
+    ips: req.ips,
+    xForwardedFor: req.headers['x-forwarded-for'] || null,
+    cfConnectingIp: req.headers['cf-connecting-ip'] || null,
+    trustProxyHops: Number(process.env.TRUST_PROXY_HOPS) || 1,
+  }
+  console.log(`[whoami] Connection from IP: ${req.ip} | X-Forwarded-For: ${info.xForwardedFor}`)
+  res.json({ data: info, message: null, error: null })
 })
 
 const docsEnabled = process.env.ENABLE_DOCS === 'true'
