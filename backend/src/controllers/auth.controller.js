@@ -102,6 +102,11 @@ const refresh = asyncHandler(async (req, res) => {
       return res.status(401).json({ data: null, message: null, error: 'Invalid refresh token' })
     }
 
+    if (stored.expiresAt < new Date()) {
+      await prisma.refreshToken.delete({ where: { id: stored.id } })
+      return res.status(401).json({ data: null, message: null, error: 'Refresh token expired' })
+    }
+
     const accessToken = signAccessToken(payload.userId)
 
     return res.json({ data: { accessToken }, message: 'Token refreshed', error: null })
