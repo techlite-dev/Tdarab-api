@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TDARAB API Documentation</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────── -->
+<header class="header">
+  <div class="header-left">
+    <button class="menu-toggle" id="menuToggle">☰</button>
+    <div class="logo">TDARAB <span>API Docs</span></div>
+  </div>
+  <div class="header-actions">
+    <a href="#" class="btn btn-download" id="downloadMd">
+      <span class="btn-icon">↓</span> Download .md
+    </a>
+  </div>
+</header>
+
+<!-- ── Sidebar ─────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-search">
+    <div class="sidebar-search-wrapper">
+      <input type="text" id="searchInput" placeholder="Search endpoints...">
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-title">Overview</div>
+    <a href="#intro" class="sidebar-link active">Introduction</a>
+    <a href="#test-credentials" class="sidebar-link">Test Credentials</a>
+    <a href="#response-format" class="sidebar-link">Response Format</a>
+    <a href="#request-requirements" class="sidebar-link">Request Requirements</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-title">Auth</div>
+    <a href="#register" class="sidebar-link"><span class="method method-post">POST</span> /auth/register</a>
+    <a href="#login" class="sidebar-link"><span class="method method-post">POST</span> /auth/login</a>
+    <a href="#refresh" class="sidebar-link"><span class="method method-post">POST</span> /auth/refresh</a>
+    <a href="#logout" class="sidebar-link"><span class="method method-post">POST</span> /auth/logout</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-title">Content</div>
+    <a href="#sections" class="sidebar-link"><span class="method method-get">GET</span> /sections</a>
+    <a href="#subsections" class="sidebar-link"><span class="method method-get">GET</span> /sections/:id/sub</a>
+    <a href="#questions" class="sidebar-link"><span class="method method-get">GET</span> /subsections/:id/q</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-title">Attempts</div>
+    <a href="#attempt" class="sidebar-link"><span class="method method-post">POST</span> /attempts</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-title">User</div>
+    <a href="#me" class="sidebar-link"><span class="method method-get">GET</span> /me</a>
+    <a href="#plans" class="sidebar-link"><span class="method method-get">GET</span> /plans</a>
+    <a href="#activate" class="sidebar-link"><span class="method method-post">POST</span> /activate</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-title">Stats</div>
+    <a href="#stats" class="sidebar-link"><span class="method method-get">GET</span> /me/stats</a>
+    <a href="#stats-sub" class="sidebar-link"><span class="method method-get">GET</span> /me/stats/:id</a>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-title">Utility</div>
+    <a href="#health" class="sidebar-link"><span class="method method-get">GET</span> /health</a>
+    <a href="#errors" class="sidebar-link">Error Codes</a>
+    <a href="#notes" class="sidebar-link">Notes</a>
+  </div>
+</aside>
+
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- ── Main Content ────────────────────────────── -->
+<main class="main">
+
+  <!-- Intro -->
+  <section id="intro" class="endpoint-section">
+    <div class="intro-card">
+      <h1>TDARAB API</h1>
+      <p>Complete REST API documentation for the medical education platform. Built for frontend developers.</p>
+      <div class="intro-meta">
+        <div class="intro-meta-item"><strong>Base URL:</strong> https://api.example.com</div>
+        <div class="intro-meta-item"><strong>Version:</strong> 1.1.0</div>
+        <div class="intro-meta-item"><strong>Last Updated:</strong> April 19, 2026</div>
+        <div class="intro-meta-item"><strong>Format:</strong> JSON</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test Credentials -->
+  <section id="test-credentials" class="endpoint-section">
+    <h2 class="section-heading">Test Credentials</h2>
+    <p class="section-desc">Use these accounts during development. Both share the same password.</p>
+    <div class="endpoint-card">
+      <div class="code-label">Password (all accounts)</div>
+      <div class="code-block">
+        <pre>123456</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="param-table">
+        <thead><tr><th>Email</th><th>Plan</th><th>Level</th><th>Use Case</th></tr></thead>
+        <tbody>
+          <tr><td><code>test@example.com</code></td><td>خطة أولى</td><td>2</td><td>Full access - can view all sections and questions</td></tr>
+          <tr><td><code>free@example.com</code></td><td>مجاني</td><td>1</td><td>Limited access - test locked content and upgrade flow</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-label">Test Activation Codes</div>
+      <table class="param-table">
+        <thead><tr><th>Code</th><th>Status</th><th>Use Case</th></tr></thead>
+        <tbody>
+          <tr><td><code>TEST-CODE-2026</code></td><td>✅ Valid</td><td>Activate to upgrade free user to level 2</td></tr>
+          <tr><td><code>TEST-CODE-2026-2</code></td><td>✅ Valid</td><td>Second valid code  - useful for testing activation after logout/re-login or a second user</td></tr>
+          <tr><td><code>USED-CODE-2026</code></td><td>❌ Used</td><td>Test "Code already used" error</td></tr>
+          <tr><td><code>EXPR-CODE-2026</code></td><td>❌ Expired</td><td>Test "Code has expired" error</td></tr>
+        </tbody>
+      </table>
+
+      <div class="note-card danger">
+        <strong>Dev only:</strong> These credentials are for development and testing only. Never use them in production.
+      </div>
+    </div>
+  </section>
+
+  <!-- Response Format -->
+  <section id="response-format" class="endpoint-section">
+    <h2 class="section-heading">Response Format</h2>
+    <p class="section-desc">Every response follows this structure:</p>
+    <div class="endpoint-card">
+      <div class="code-block">
+        <div class="code-label">Standard Response Shape</div>
+        <pre>{
+  "data": { ... },
+  "message": "Human-readable message or null",
+  "error": "Error description or null"
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+      <div class="note-card">
+        All protected endpoints require: <code>Authorization: Bearer &lt;accessToken&gt;</code>
+        <br>Access tokens expire after <strong>15 minutes</strong>  - use <code>POST /api/auth/refresh</code> to renew.
+      </div>
+    </div>
+  </section>
+
+  <!-- Request Requirements -->
+  <section id="request-requirements" class="endpoint-section">
+    <h2 class="section-heading">Request Requirements <small>(all POST endpoints)</small></h2>
+    <p class="section-desc">These rules apply to every request that carries a body.</p>
+    <div class="endpoint-card">
+      <div class="note-card">
+        <strong>Header:</strong> <code>Content-Type: application/json</code><br>
+        <strong>Body size limit:</strong> <code>10 kb</code>  - larger bodies are rejected with <code>413</code>.<br>
+        <strong>Body must be valid JSON</strong>  - malformed JSON is rejected with <code>400</code> before the route handler runs.
+      </div>
+
+      <div class="code-label">Common Errors (apply to every POST endpoint)</div>
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-400">400</span></td><td>Invalid JSON in request body</td><td>The request body is not valid JSON (parse failed)</td></tr>
+          <tr><td><span class="status-code status-413">413</span></td><td>Request body too large</td><td>The request body exceeds 10 kb</td></tr>
+          <tr><td><span class="status-code status-500">500</span></td><td>Internal server error</td><td>Unexpected server-side failure</td></tr>
+        </tbody>
+      </table>
+      <div class="note-card">
+        These are global fallbacks. Endpoint-specific errors are listed under each endpoint below.
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── AUTH ──────────────────────────────────── -->
+
+  <!-- Register -->
+  <section id="register" class="endpoint-section">
+    <h2 class="section-heading">Authentication</h2>
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method post">POST</span>
+        <span class="endpoint-path">/api/auth/register</span>
+        <div class="endpoint-badges">
+          <span class="badge badge-public">Public</span>
+          <span class="badge badge-ratelimit">⏱ Rate Limited</span>
+        </div>
+      </div>
+      <p class="endpoint-desc">Create a new user account. New users are assigned the free plan (level 1). Rate limited to <strong>3 requests / hour</strong> per IP.</p>
+
+      <div class="code-label">Request Body</div>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>email</code></td><td>string</td><td class="param-required">✅</td><td>Unique email address</td></tr>
+          <tr><td><code>name</code></td><td>string</td><td class="param-required">✅</td><td>Display name</td></tr>
+          <tr><td><code>password</code></td><td>string</td><td class="param-required">✅</td><td>User password</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 201</div>
+        <pre>{
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "name": "User Name",
+    "createdAt": "2026-04-13T12:00:00.000Z",
+    "plan": { "id": 1, "name": "مجاني", "level": 1 }
+  },
+  "message": "Registration successful",
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-400">400</span></td><td>email, name, and password are required</td><td>Missing fields</td></tr>
+          <tr><td><span class="status-code status-409">409</span></td><td>Email already in use</td><td>Duplicate email</td></tr>
+          <tr><td><span class="status-code status-429">429</span></td><td>Too many registration attempts, please try again later</td><td>Rate limit exceeded (3/hour)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Login -->
+  <section id="login" class="endpoint-section">
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method post">POST</span>
+        <span class="endpoint-path">/api/auth/login</span>
+        <div class="endpoint-badges">
+          <span class="badge badge-public">Public</span>
+          <span class="badge badge-ratelimit">⏱ Rate Limited</span>
+        </div>
+      </div>
+      <p class="endpoint-desc">Authenticate a user and receive access + refresh tokens. Rate limited to <strong>5 requests / 15 minutes</strong> per IP.</p>
+
+      <div class="code-label">Request Body</div>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>email</code></td><td>string</td><td class="param-required">✅</td><td>User email</td></tr>
+          <tr><td><code>password</code></td><td>string</td><td class="param-required">✅</td><td>User password</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": {
+    "accessToken": "eyJhbGciOi...",
+    "refreshToken": "eyJhbGciOi...",
+    "user": {
+      "id": 1,
+      "email": "user@example.com",
+      "name": "User Name",
+      "plan": { "id": 1, "name": "مجاني", "level": 1 },
+      "planExpiresAt": null
+    }
+  },
+  "message": "Login successful",
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-400">400</span></td><td>email and password are required</td><td>Missing fields</td></tr>
+          <tr><td><span class="status-code status-401">401</span></td><td>Invalid credentials</td><td>Wrong email or password</td></tr>
+          <tr><td><span class="status-code status-429">429</span></td><td>Too many login attempts, please try again later</td><td>Rate limit exceeded (5/15 min)</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Refresh -->
+  <section id="refresh" class="endpoint-section">
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method post">POST</span>
+        <span class="endpoint-path">/api/auth/refresh</span>
+        <div class="endpoint-badges"><span class="badge badge-public">Public</span></div>
+      </div>
+      <p class="endpoint-desc">Get a new access token using a valid refresh token.</p>
+
+      <div class="code-label">Request Body</div>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>refreshToken</code></td><td>string</td><td class="param-required">✅</td><td>Refresh token from login</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": { "accessToken": "eyJhbGciOi..." },
+  "message": "Token refreshed",
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-400">400</span></td><td>refreshToken is required</td><td>Missing field</td></tr>
+          <tr><td><span class="status-code status-401">401</span></td><td>Invalid refresh token</td><td>Token not found in DB (already logged out or forged)</td></tr>
+          <tr><td><span class="status-code status-401">401</span></td><td>Refresh token expired</td><td>Token row exists in DB but its <code>expiresAt</code> is in the past. The row is deleted server-side; the client <strong>must force a full re-login</strong> and not retry <code>/refresh</code>.</td></tr>
+          <tr><td><span class="status-code status-401">401</span></td><td>Invalid or expired refresh token</td><td>JWT signature invalid or malformed payload</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Logout -->
+  <section id="logout" class="endpoint-section">
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method post">POST</span>
+        <span class="endpoint-path">/api/auth/logout</span>
+        <div class="endpoint-badges"><span class="badge badge-public">Public</span></div>
+      </div>
+      <p class="endpoint-desc">Invalidate a refresh token (remove from DB).</p>
+
+      <div class="code-label">Request Body</div>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>refreshToken</code></td><td>string</td><td class="param-required">✅</td><td>Refresh token to invalidate</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": null,
+  "message": "Logged out successfully",
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-400">400</span></td><td>refreshToken is required</td><td>Missing field</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── CONTENT ───────────────────────────────── -->
+
+  <!-- Sections -->
+  <section id="sections" class="endpoint-section">
+    <h2 class="section-heading">Content</h2>
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method get">GET</span>
+        <span class="endpoint-path">/api/sections</span>
+        <div class="endpoint-badges"><span class="badge badge-auth">🔒 Auth</span></div>
+      </div>
+      <p class="endpoint-desc">Get all sections with subsections and user progress. Locked content returns minimal data (id + requiredPlanLevel only).</p>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": [
+    {
+      "id": 1,
+      "name": "السنة الأولى",
+      "order": 1,
+      "requiredPlanLevel": 1,
+      "locked": false,
+      "subSections": [
+        {
+          "id": 1,
+          "name": "التشريح",
+          "order": 1,
+          "requiredPlanLevel": 1,
+          "locked": false,
+          "totalQuestions": 2,
+          "userStats": { "answered": 3, "correct": 2 }
+        },
+        { "id": 2, "locked": true, "requiredPlanLevel": 2 }
+      ]
+    },
+    { "id": 2, "locked": true, "requiredPlanLevel": 2 }
+  ],
+  "message": null,
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-401">401</span></td><td>Unauthorized</td><td>No or invalid token</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SubSections -->
+  <section id="subsections" class="endpoint-section">
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method get">GET</span>
+        <span class="endpoint-path">/api/sections/:id/subsections</span>
+        <div class="endpoint-badges"><span class="badge badge-auth">🔒 Auth</span></div>
+      </div>
+      <p class="endpoint-desc">Get subsections for a specific section with progress stats.</p>
+
+      <div class="code-label">Path Parameters</div>
+      <table class="param-table">
+        <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>integer</td><td>Section ID</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": [
+    {
+      "id": 1,
+      "name": "التشريح",
+      "order": 1,
+      "sectionId": 1,
+      "requiredPlanLevel": 1,
+      "locked": false,
+      "totalQuestions": 2,
+      "userStats": { "answered": 3, "correct": 2 }
+    }
+  ],
+  "message": null,
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-401">401</span></td><td>Unauthorized</td><td>No or invalid token</td></tr>
+          <tr><td><span class="status-code status-403">403</span></td><td>Access denied</td><td>Plan level too low</td></tr>
+          <tr><td><span class="status-code status-404">404</span></td><td>Section not found</td><td>Invalid section ID</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Questions -->
+  <section id="questions" class="endpoint-section">
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method get">GET</span>
+        <span class="endpoint-path">/api/subsections/:id/questions</span>
+        <div class="endpoint-badges"><span class="badge badge-auth">🔒 Auth</span></div>
+      </div>
+      <p class="endpoint-desc">Get questions for a subsection. <strong>isCorrect is never included in choices</strong>  - only revealed after submitting an attempt.</p>
+
+      <div class="code-label">Path Parameters</div>
+      <table class="param-table">
+        <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>id</code></td><td>integer</td><td>SubSection ID</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": [
+    {
+      "id": 1,
+      "text": "كم عدد عظام جسم الإنسان البالغ؟",
+      "imageUrl": null,
+      "requiredPlanLevel": 1,
+      "choices": [
+        { "id": 1, "text": "206" },
+        { "id": 2, "text": "208" },
+        { "id": 3, "text": "210" },
+        { "id": 4, "text": "212" }
+      ]
+    },
+    { "id": 3, "locked": true, "requiredPlanLevel": 2 }
+  ],
+  "message": null,
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-401">401</span></td><td>Unauthorized</td><td>No or invalid token</td></tr>
+          <tr><td><span class="status-code status-403">403</span></td><td>Access denied</td><td>Plan level too low for subsection</td></tr>
+          <tr><td><span class="status-code status-404">404</span></td><td>SubSection not found</td><td>Invalid subsection ID</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── ATTEMPTS ──────────────────────────────── -->
+
+  <section id="attempt" class="endpoint-section">
+    <h2 class="section-heading">Attempts</h2>
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method post">POST</span>
+        <span class="endpoint-path">/api/attempts</span>
+        <div class="endpoint-badges"><span class="badge badge-auth">🔒 Auth</span></div>
+      </div>
+      <p class="endpoint-desc">Submit an answer to a question. Returns whether correct, the explanation, and the correct choice.</p>
+
+      <div class="code-label">Request Body</div>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>questionId</code></td><td>integer</td><td class="param-required">✅</td><td>The question ID</td></tr>
+          <tr><td><code>selectedChoiceId</code></td><td>integer</td><td class="param-required">✅</td><td>The chosen answer ID</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 201</div>
+        <pre>{
+  "data": {
+    "attemptId": 1,
+    "isCorrect": true,
+    "explanation": "يحتوي جسم الإنسان البالغ على 206 عظمة.",
+    "correctChoice": { "id": 1, "text": "206" }
+  },
+  "message": "Correct!",
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-400">400</span></td><td>questionId and selectedChoiceId are required</td><td>Missing fields</td></tr>
+          <tr><td><span class="status-code status-400">400</span></td><td>Invalid choice for this question</td><td>Choice doesn't belong to question</td></tr>
+          <tr><td><span class="status-code status-401">401</span></td><td>Unauthorized</td><td>No or invalid token</td></tr>
+          <tr><td><span class="status-code status-403">403</span></td><td>Access denied</td><td>Plan level too low</td></tr>
+          <tr><td><span class="status-code status-404">404</span></td><td>Question not found</td><td>Invalid question ID</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── USER ──────────────────────────────────── -->
+
+  <!-- Me -->
+  <section id="me" class="endpoint-section">
+    <h2 class="section-heading">User</h2>
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method get">GET</span>
+        <span class="endpoint-path">/api/me</span>
+        <div class="endpoint-badges"><span class="badge badge-auth">🔒 Auth</span></div>
+      </div>
+      <p class="endpoint-desc">Get the current authenticated user's profile.</p>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "name": "User Name",
+    "planExpiresAt": "2026-05-13T00:00:00.000Z",
+    "plan": { "id": 2, "name": "خطة أولى", "level": 2 }
+  },
+  "message": null,
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-401">401</span></td><td>Unauthorized</td><td>No or invalid token</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Plans -->
+  <section id="plans" class="endpoint-section">
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method get">GET</span>
+        <span class="endpoint-path">/api/plans</span>
+        <div class="endpoint-badges"><span class="badge badge-public">Public</span></div>
+      </div>
+      <p class="endpoint-desc">Get all available plans. No authentication required.</p>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": [
+    { "id": 1, "name": "مجاني", "level": 1, "price": 0, "currency": "USD" },
+    { "id": 2, "name": "خطة أولى", "level": 2, "price": 9.99, "currency": "USD" }
+  ],
+  "message": null,
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Activate -->
+  <section id="activate" class="endpoint-section">
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method post">POST</span>
+        <span class="endpoint-path">/api/activate</span>
+        <div class="endpoint-badges">
+          <span class="badge badge-auth">🔒 Auth</span>
+          <span class="badge badge-ratelimit">⏱ Rate Limited</span>
+        </div>
+      </div>
+      <p class="endpoint-desc">Activate a subscription code. Upgrades the user's plan and creates a subscription record. Rate limited to <strong>10 requests / 15 minutes</strong> per IP.</p>
+
+      <div class="code-label">Request Body</div>
+      <table class="param-table">
+        <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>code</code></td><td>string</td><td class="param-required">✅</td><td>Activation code (e.g. MED-K7NP-3QXA)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": {
+    "subscription": {
+      "id": 4,
+      "userId": 2,
+      "planLevel": 2,
+      "startDate": "2026-04-19T04:09:47.241Z",
+      "endDate": "2026-05-19T04:09:47.241Z",
+      "activationCodeId": 4
+    },
+    "user": {
+      "id": 2,
+      "email": "user@example.com",
+      "name": "User Name",
+      "planExpiresAt": "2026-05-19T04:09:47.241Z",
+      "plan": { "id": 2, "name": "خطة أولى", "level": 2 }
+    }
+  },
+  "message": "Plan activated successfully",
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <div class="note-card">
+        <strong>🔒 Concurrency guarantee:</strong> If the same code is activated by multiple concurrent requests, exactly one succeeds with <code>200</code> and all others receive <code>400 Code already used</code>. The activation is atomic  - no duplicate subscriptions are ever created.
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-400">400</span></td><td>code is required</td><td>Missing field</td></tr>
+          <tr><td><span class="status-code status-400">400</span></td><td>Code already used</td><td>Previously activated, or lost the race to a concurrent request</td></tr>
+          <tr><td><span class="status-code status-400">400</span></td><td>Code has expired</td><td>Expiration date passed</td></tr>
+          <tr><td><span class="status-code status-400">400</span></td><td>Plan not found for this code</td><td>No matching plan</td></tr>
+          <tr><td><span class="status-code status-401">401</span></td><td>Unauthorized</td><td>No or invalid token</td></tr>
+          <tr><td><span class="status-code status-404">404</span></td><td>Invalid code</td><td>Code doesn't exist</td></tr>
+          <tr><td><span class="status-code status-429">429</span></td><td>Too many requests</td><td>Rate limit exceeded</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── STATS ─────────────────────────────────── -->
+
+  <!-- Overall Stats -->
+  <section id="stats" class="endpoint-section">
+    <h2 class="section-heading">Stats</h2>
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method get">GET</span>
+        <span class="endpoint-path">/api/me/stats</span>
+        <div class="endpoint-badges"><span class="badge badge-auth">🔒 Auth</span></div>
+      </div>
+      <p class="endpoint-desc">Get overall performance statistics, grouped by subsection.</p>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": {
+    "overall": { "total": 6, "correct": 4, "percentage": 67 },
+    "bySubSection": [
+      {
+        "id": 1,
+        "name": "التشريح",
+        "sectionName": "السنة الأولى",
+        "total": 3,
+        "correct": 2,
+        "percentage": 67
+      }
+    ]
+  },
+  "message": null,
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-401">401</span></td><td>Unauthorized</td><td>No or invalid token</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- SubSection Stats -->
+  <section id="stats-sub" class="endpoint-section">
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method get">GET</span>
+        <span class="endpoint-path">/api/me/stats/:subSectionId</span>
+        <div class="endpoint-badges"><span class="badge badge-auth">🔒 Auth</span></div>
+      </div>
+      <p class="endpoint-desc">Get detailed attempt history for a specific subsection.</p>
+
+      <div class="code-label">Path Parameters</div>
+      <table class="param-table">
+        <thead><tr><th>Param</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>subSectionId</code></td><td>integer</td><td>SubSection ID</td></tr>
+        </tbody>
+      </table>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": {
+    "subSectionId": 1,
+    "total": 3,
+    "correct": 2,
+    "wrong": 1,
+    "percentage": 67,
+    "attempts": [
+      {
+        "questionText": "كم عدد عظام جسم الإنسان البالغ؟",
+        "selectedAnswer": "206",
+        "isCorrect": true,
+        "explanation": "يحتوي جسم الإنسان البالغ على 206 عظمة."
+      }
+    ]
+  },
+  "message": null,
+  "error": null
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+
+      <table class="error-table">
+        <thead><tr><th>Status</th><th>Error</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="status-code status-400">400</span></td><td>Invalid subSectionId</td><td>Non-numeric parameter</td></tr>
+          <tr><td><span class="status-code status-401">401</span></td><td>Unauthorized</td><td>No or invalid token</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ─── UTILITY ───────────────────────────────── -->
+
+  <!-- Health -->
+  <section id="health" class="endpoint-section">
+    <h2 class="section-heading">Utility</h2>
+    <div class="endpoint-card">
+      <div class="endpoint-header">
+        <span class="endpoint-method get">GET</span>
+        <span class="endpoint-path">/health</span>
+        <div class="endpoint-badges"><span class="badge badge-public">Public</span></div>
+      </div>
+      <p class="endpoint-desc">Health check endpoint.</p>
+
+      <div class="code-block">
+        <div class="code-label">Success Response  - 200</div>
+        <pre>{
+  "data": { "status": "ok" },
+  "message": "Server is running"
+}</pre>
+        <button class="copy-btn">Copy</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Error Codes -->
+  <section id="errors" class="endpoint-section">
+    <h2 class="section-heading">Error Status Codes</h2>
+    <div class="status-grid">
+      <div class="status-item"><div class="code status-400">400</div><div class="label">Bad Request  - missing/invalid fields or malformed JSON body</div></div>
+      <div class="status-item"><div class="code status-401">401</div><div class="label">Unauthorized  - missing or expired token</div></div>
+      <div class="status-item"><div class="code status-403">403</div><div class="label">Forbidden  - insufficient plan level</div></div>
+      <div class="status-item"><div class="code status-404">404</div><div class="label">Not Found  - resource doesn't exist</div></div>
+      <div class="status-item"><div class="code status-409">409</div><div class="label">Conflict  - duplicate resource</div></div>
+      <div class="status-item"><div class="code status-413">413</div><div class="label">Payload Too Large  - body exceeds 10 kb</div></div>
+      <div class="status-item"><div class="code status-429">429</div><div class="label">Too Many Requests  - rate limit</div></div>
+      <div class="status-item"><div class="code status-500">500</div><div class="label">Internal Server Error  - unexpected failure</div></div>
+    </div>
+  </section>
+
+  <!-- Notes -->
+  <section id="notes" class="endpoint-section">
+    <h2 class="section-heading">Important Notes</h2>
+    <div class="note-card danger">
+      <strong>Security:</strong> <code>isCorrect</code> is <strong>never</strong> sent in question choices  - only revealed after submitting an attempt.
+    </div>
+    <div class="note-card danger">
+      <strong>Security:</strong> <code>passwordHash</code> is <strong>never</strong> included in any API response.
+    </div>
+    <div class="note-card warning">
+      <strong>Cron Job:</strong> Expired plans are automatically downgraded to free (level 1) daily at <strong>00:00 Asia/Damascus</strong>.
+    </div>
+    <div class="note-card warning">
+      <strong>Plan expiry  - calendar-day boundary (by design):</strong> A user whose subscription ends mid-day (for example at 14:00) remains on their paid plan until the next daily cron run at 00:00 Asia/Damascus. This is an intentional product policy  - <strong>do not treat a user remaining on a paid plan a few hours after their <code>planExpiresAt</code> timestamp as a bug</strong>.
+    </div>
+    <div class="note-card">
+      <strong>Tokens:</strong> Refresh tokens are stored server-side in the database  - stateless refresh is not supported.
+    </div>
+    <div class="note-card">
+      <strong>Refresh error distinction:</strong> On <code>POST /api/auth/refresh</code>, the error <code>Refresh token expired</code> is <strong>distinct</strong> from <code>Invalid or expired refresh token</code>. The former means the server deleted the stored row and the client must force a full re-login. The latter means the JWT signature/payload failed verification.
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="footer-content">
+    <span class="footer-line">Crafted with precision by <a href="https://techlite.dev" target="_blank" rel="noopener" class="techlite-link">Techlite</a></span>
+    <span class="footer-dot"></span>
+    <span class="footer-sub">Engineering clarity, one endpoint at a time.</span>
+  </div>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
