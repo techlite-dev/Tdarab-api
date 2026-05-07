@@ -15,10 +15,12 @@ TDARAB is a medical education platform serving MCQ questions to students. This r
 ## Features
 
 - **Authentication**: JWT-based auth with refresh tokens stored server-side
-- **Content Access Control**: Plan-based locking for sections, subsections, and questions
-- **Question Bank**: MCQ questions with images and explanations
-- **User Statistics**: Track progress and performance per subsection
+- **Content Access Control**: Plan-based locking across the full hierarchy (sections, subsections, chapters, questions)
+- **Content Tree**: Plans endpoint returns full hierarchical content tree for pricing and feature pages
+- **Question Bank**: MCQ questions organized under chapters with images and explanations
+- **User Statistics**: Track progress and performance per chapter and subsection
 - **Activation Codes**: One-time codes for subscription upgrades
+- **Security Hardening**: Rate limiting on all auth routes, max refresh tokens per user, max attempts per question
 - **Cron Jobs**: Automatic plan downgrade and token cleanup
 
 ## Tech Stack
@@ -83,16 +85,17 @@ Static documentation: [docs/index.html](docs/index.html)
 - `POST /api/auth/logout` — Invalidate refresh token
 
 ### Content
-- `GET /api/sections` — List all sections
-- `GET /api/sections/:id/subsections` — Get subsections
-- `GET /api/subsections/:id/questions` — Get questions
+- `GET /api/sections` — List all sections with subsection summaries
+- `GET /api/sections/:id/subsections` — Get subsections with chapter summaries and user stats
+- `GET /api/chapters/subsection/:id` — Get chapters for a subsection with user stats
+- `GET /api/chapters/:id/questions` — Get questions for a chapter
 
 ### Attempts
 - `POST /api/attempts` — Submit answer
 
 ### User
 - `GET /api/me` — Get profile
-- `GET /api/plans` — List plans
+- `GET /api/plans` — List plans with full content tree per plan level
 - `POST /api/activate` — Activate subscription code
 
 ### Stats
