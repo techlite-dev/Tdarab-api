@@ -15,10 +15,12 @@ overlay.addEventListener('click', () => {
 
 // Close sidebar on link click (mobile)
 document.querySelectorAll('.sidebar-link').forEach((link) => {
-  link.addEventListener('click', () => {
+  link.addEventListener('click', (e) => {
     if (window.innerWidth <= 768) {
-      sidebar.classList.remove('open')
-      overlay.classList.remove('active')
+      setTimeout(() => {
+        sidebar.classList.remove('open')
+        overlay.classList.remove('active')
+      }, 80)
     }
   })
 })
@@ -51,7 +53,7 @@ const navLinks = document.querySelectorAll('.sidebar-link')
 
 const observerOptions = {
   root: null,
-  rootMargin: '-80px 0px -60% 0px',
+  rootMargin: '-80px 0px -40% 0px',
   threshold: 0,
 }
 

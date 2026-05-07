@@ -31,7 +31,92 @@ const getPlans = asyncHandler(async (req, res) => {
     },
   })
 
-  return res.json({ data: plans, message: null, error: null })
+  const plansWithContent = await Promise.all(
+    plans.map(async (plan) => {
+      const sections = await prisma.section.findMany({
+        where: { requiredPlanLevel: { lte: plan.level } },
+        orderBy: { order: 'asc' },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          subSections: {
+            where: { requiredPlanLevel: { lte: plan.level } },
+            orderBy: { order: 'asc' },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              chapters: {
+                where: { requiredPlanLevel: { lte: plan.level } },
+                orderBy: { order: 'asc' },
+                select: {
+                  id: true,
+                  name: true,
+                  description: true,
+                  _count: { select: { questions: true } },
+                },
+              },
+            },
+          },
+        },
+      })
+
+      const subSectionsCount = sections.reduce(
+        (acc, s) => acc + s.subSections.length,
+        0
+      )
+
+      const chaptersCount = sections.reduce(
+        (acc, s) =>
+          acc + s.subSections.reduce((a, sub) => a + sub.chapters.length, 0),
+        0
+      )
+
+      const questionsCount = sections.reduce(
+        (acc, s) =>
+          acc +
+          s.subSections.reduce(
+            (a, sub) =>
+              a + sub.chapters.reduce((b, ch) => b + ch._count.questions, 0),
+            0
+          ),
+        0
+      )
+
+      const sectionsFormatted = sections.map((s) => ({
+        id: s.id,
+        name: s.name,
+        description: s.description,
+        subSectionsCount: s.subSections.length,
+        subSections: s.subSections.map((sub) => ({
+          id: sub.id,
+          name: sub.name,
+          description: sub.description,
+          chaptersCount: sub.chapters.length,
+          chapters: sub.chapters.map((ch) => ({
+            id: ch.id,
+            name: ch.name,
+            description: ch.description,
+            questionsCount: ch._count.questions,
+          })),
+        })),
+      }))
+
+      return {
+        ...plan,
+        content: {
+          sectionsCount: sections.length,
+          subSectionsCount,
+          chaptersCount,
+          questionsCount,
+          sections: sectionsFormatted,
+        },
+      }
+    })
+  )
+
+  return res.json({ data: plansWithContent, message: null, error: null })
 })
 
 const activateCode = asyncHandler(async (req, res) => {

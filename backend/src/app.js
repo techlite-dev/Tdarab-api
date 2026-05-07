@@ -1,11 +1,12 @@
 require('dotenv').config()
 const express = require('express')
+const prisma = require('./lib/prisma')
 const cors = require('cors')
 const path = require('path')
 
 const authRoutes = require('./routes/auth.routes')
 const sectionsRoutes = require('./routes/sections.routes')
-const questionsRoutes = require('./routes/questions.routes')
+const chaptersRoutes = require('./routes/chapters.routes')
 const attemptsRoutes = require('./routes/attempts.routes')
 const userRoutes = require('./routes/user.routes')
 const statsRoutes = require('./routes/stats.routes')
@@ -26,8 +27,13 @@ const corsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json({ limit: '10kb' }))
 
-app.get('/health', (req, res) => {
-  res.json({ data: { status: 'ok' }, message: 'Server is running' })
+app.get('/health', async (req, res) => {
+  try {
+    await prisma.$queryRaw`SELECT 1`
+    res.json({ data: { status: 'ok', db: 'ok' }, message: 'Server is running', error: null })
+  } catch (err) {
+    res.status(503).json({ data: { status: 'ok', db: 'unreachable' }, message: null, error: 'Database unreachable' })
+  }
 })
 
 app.get('/whoami', (req, res) => {
@@ -59,7 +65,7 @@ if (docsEnabled) {
 
 app.use('/api/auth', authRoutes)
 app.use('/api/sections', sectionsRoutes)
-app.use('/api/subsections', questionsRoutes)
+app.use('/api/chapters', chaptersRoutes)
 app.use('/api/attempts', attemptsRoutes)
 app.use('/api', userRoutes)
 app.use('/api', statsRoutes)

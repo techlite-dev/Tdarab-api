@@ -19,6 +19,7 @@ model Plan {
   users       User[]
   sections    Section[]
   subSections SubSection[]
+  chapters    Chapter[]
   questions   Question[]
 }
 
@@ -45,11 +46,15 @@ model RefreshToken {
   expiresAt DateTime
 
   user      User     @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model Section {
   id                Int          @id @default(autoincrement())
   name              String
+  description       String?
   order             Int
   requiredPlanLevel Int          @default(1)
   createdAt         DateTime     @default(now())
@@ -61,14 +66,29 @@ model Section {
 model SubSection {
   id                Int        @id @default(autoincrement())
   name              String
+  description       String?
   order             Int
   sectionId         Int
   requiredPlanLevel Int        @default(1)
   createdAt         DateTime   @default(now())
 
-  section   Section    @relation(fields: [sectionId], references: [id])
-  plan      Plan       @relation(fields: [requiredPlanLevel], references: [level])
-  questions Question[]
+  section  Section   @relation(fields: [sectionId], references: [id])
+  plan     Plan      @relation(fields: [requiredPlanLevel], references: [level])
+  chapters Chapter[]
+}
+
+model Chapter {
+  id                Int      @id @default(autoincrement())
+  name              String
+  description       String?
+  order             Int
+  subSectionId      Int
+  requiredPlanLevel Int      @default(1)
+  createdAt         DateTime @default(now())
+
+  subSection SubSection @relation(fields: [subSectionId], references: [id])
+  plan       Plan       @relation(fields: [requiredPlanLevel], references: [level])
+  questions  Question[]
 }
 
 model Question {
@@ -76,14 +96,14 @@ model Question {
   text              String
   imageUrl          String?
   explanation       String
-  subSectionId      Int
+  chapterId         Int
   requiredPlanLevel Int      @default(1)
   createdAt         DateTime @default(now())
 
-  subSection SubSection @relation(fields: [subSectionId], references: [id])
-  plan       Plan       @relation(fields: [requiredPlanLevel], references: [level])
-  choices    Choice[]
-  attempts   Attempt[]
+  chapter  Chapter  @relation(fields: [chapterId], references: [id])
+  plan     Plan     @relation(fields: [requiredPlanLevel], references: [level])
+  choices  Choice[]
+  attempts Attempt[]
 }
 
 model Choice {
@@ -107,6 +127,9 @@ model Attempt {
   user           User     @relation(fields: [userId], references: [id])
   question       Question @relation(fields: [questionId], references: [id])
   selectedChoice Choice   @relation(fields: [selectedChoiceId], references: [id])
+
+  @@index([userId])
+  @@index([userId, questionId])
 }
 
 model ActivationCode {

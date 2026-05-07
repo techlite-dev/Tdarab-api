@@ -1,6 +1,14 @@
 const prisma = require('../lib/prisma')
 const asyncHandler = require('../utils/asyncHandler')
+const {
+  getSubSectionEffectivePlan,
+  getChapterEffectivePlan,
+} = require('../lib/effectivePlan')
 
+/**
+ * GET /api/sections
+ * Get all sections with subsection summaries (no chapter details for performance)
+ */
 const getSections = asyncHandler(async (req, res) => {
   const userLevel = req.user.plan.level
 
@@ -10,26 +18,11 @@ const getSections = asyncHandler(async (req, res) => {
       subSections: {
         orderBy: { order: 'asc' },
         include: {
-          _count: { select: { questions: true } },
+          _count: { select: { chapters: true } },
         },
       },
     },
   })
-
-  const userAttempts = await prisma.attempt.findMany({
-    where: { userId: req.user.id },
-    select: { questionId: true, isCorrect: true, question: { select: { subSectionId: true } } },
-  })
-
-  const statsBySubSection = {}
-  for (const attempt of userAttempts) {
-    const subId = attempt.question.subSectionId
-    if (!statsBySubSection[subId]) {
-      statsBySubSection[subId] = { answered: 0, correct: 0 }
-    }
-    statsBySubSection[subId].answered++
-    if (attempt.isCorrect) statsBySubSection[subId].correct++
-  }
 
   const result = sections.map((section) => {
     const sectionLocked = userLevel < section.requiredPlanLevel
@@ -49,26 +42,24 @@ const getSections = asyncHandler(async (req, res) => {
       requiredPlanLevel: section.requiredPlanLevel,
       locked: false,
       subSections: section.subSections.map((sub) => {
-        const subLocked = userLevel < sub.requiredPlanLevel
+        const subEffective = getSubSectionEffectivePlan(sub, section)
+        const subLocked = userLevel < subEffective
 
         if (subLocked) {
           return {
             id: sub.id,
             locked: true,
-            requiredPlanLevel: sub.requiredPlanLevel,
+            requiredPlanLevel: subEffective,
           }
         }
-
-        const stats = statsBySubSection[sub.id] || { answered: 0, correct: 0 }
 
         return {
           id: sub.id,
           name: sub.name,
           order: sub.order,
-          requiredPlanLevel: sub.requiredPlanLevel,
+          requiredPlanLevel: subEffective,
           locked: false,
-          totalQuestions: sub._count.questions,
-          userStats: stats,
+          totalChapters: sub._count.chapters,
         }
       }),
     }
@@ -77,6 +68,10 @@ const getSections = asyncHandler(async (req, res) => {
   return res.json({ data: result, message: null, error: null })
 })
 
+/**
+ * GET /api/sections/:id/subsections
+ * Get subsections for a section with chapter summaries
+ */
 const getSubSections = asyncHandler(async (req, res) => {
   const sectionId = parseInt(req.params.id)
 
@@ -106,50 +101,84 @@ const getSubSections = asyncHandler(async (req, res) => {
     where: { sectionId },
     orderBy: { order: 'asc' },
     include: {
-      _count: { select: { questions: true } },
+      chapters: {
+        orderBy: { order: 'asc' },
+        include: {
+          _count: { select: { questions: true } },
+        },
+      },
     },
   })
 
+  // Get user attempts for questions in these subsections
   const userAttempts = await prisma.attempt.findMany({
     where: {
       userId: req.user.id,
-      question: { subSectionId: { in: subSections.map((s) => s.id) } },
+      question: { chapter: { subSectionId: { in: subSections.map((s) => s.id) } } },
     },
-    select: { isCorrect: true, question: { select: { subSectionId: true } } },
+    select: {
+      isCorrect: true,
+      question: { select: { chapterId: true } },
+    },
   })
 
-  const statsBySubSection = {}
+  const statsByChapter = {}
   for (const attempt of userAttempts) {
-    const subId = attempt.question.subSectionId
-    if (!statsBySubSection[subId]) {
-      statsBySubSection[subId] = { answered: 0, correct: 0 }
+    const chapterId = attempt.question.chapterId
+    if (!statsByChapter[chapterId]) {
+      statsByChapter[chapterId] = { answered: 0, correct: 0 }
     }
-    statsBySubSection[subId].answered++
-    if (attempt.isCorrect) statsBySubSection[subId].correct++
+    statsByChapter[chapterId].answered++
+    if (attempt.isCorrect) statsByChapter[chapterId].correct++
   }
 
   const result = subSections.map((sub) => {
-    const subLocked = userLevel < sub.requiredPlanLevel
+    const subEffective = getSubSectionEffectivePlan(sub, section)
+    const subLocked = userLevel < subEffective
 
     if (subLocked) {
       return {
         id: sub.id,
         locked: true,
-        requiredPlanLevel: sub.requiredPlanLevel,
+        requiredPlanLevel: subEffective,
       }
     }
 
-    const stats = statsBySubSection[sub.id] || { answered: 0, correct: 0 }
+    const chapters = sub.chapters.map((chapter) => {
+      const chapterEffective = getChapterEffectivePlan(chapter, sub, section)
+      const chapterLocked = userLevel < chapterEffective
+
+      if (chapterLocked) {
+        return {
+          id: chapter.id,
+          locked: true,
+          requiredPlanLevel: chapterEffective,
+        }
+      }
+
+      const stats = statsByChapter[chapter.id] || { answered: 0, correct: 0 }
+
+      return {
+        id: chapter.id,
+        name: chapter.name,
+        order: chapter.order,
+        subSectionId: chapter.subSectionId,
+        requiredPlanLevel: chapterEffective,
+        locked: false,
+        totalQuestions: chapter._count.questions,
+        userStats: stats,
+      }
+    })
 
     return {
       id: sub.id,
       name: sub.name,
       order: sub.order,
       sectionId: sub.sectionId,
-      requiredPlanLevel: sub.requiredPlanLevel,
+      requiredPlanLevel: subEffective,
       locked: false,
-      totalQuestions: sub._count.questions,
-      userStats: stats,
+      totalChapters: sub.chapters.length,
+      chapters,
     }
   })
 

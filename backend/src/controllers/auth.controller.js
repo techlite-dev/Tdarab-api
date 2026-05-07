@@ -3,6 +3,8 @@ const bcrypt = require('bcrypt')
 const { signAccessToken, signRefreshToken, verifyRefreshToken } = require('../utils/jwt.util')
 const asyncHandler = require('../utils/asyncHandler')
 
+const MAX_REFRESH_TOKENS_PER_USER = 5
+
 const register = asyncHandler(async (req, res) => {
   const { email, name, password } = req.body
 
@@ -65,8 +67,21 @@ const login = asyncHandler(async (req, res) => {
   const refreshExpiresAt = new Date()
   refreshExpiresAt.setDate(refreshExpiresAt.getDate() + 30)
 
-  await prisma.refreshToken.create({
-    data: { token: refreshToken, userId: user.id, expiresAt: refreshExpiresAt },
+  await prisma.$transaction(async (tx) => {
+    await tx.refreshToken.create({
+      data: { token: refreshToken, userId: user.id, expiresAt: refreshExpiresAt },
+    })
+
+    const existing = await tx.refreshToken.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: 'desc' },
+      select: { id: true },
+    })
+
+    if (existing.length > MAX_REFRESH_TOKENS_PER_USER) {
+      const idsToDelete = existing.slice(MAX_REFRESH_TOKENS_PER_USER).map((t) => t.id)
+      await tx.refreshToken.deleteMany({ where: { id: { in: idsToDelete } } })
+    }
   })
 
   return res.json({
@@ -122,7 +137,13 @@ const logout = asyncHandler(async (req, res) => {
     return res.status(400).json({ data: null, message: null, error: 'refreshToken is required' })
   }
 
-  await prisma.refreshToken.deleteMany({ where: { token: refreshToken } })
+  const stored = await prisma.refreshToken.findUnique({ where: { token: refreshToken } })
+
+  if (!stored || stored.userId !== req.user.id) {
+    return res.status(403).json({ data: null, message: null, error: 'Token does not belong to this user' })
+  }
+
+  await prisma.refreshToken.delete({ where: { id: stored.id } })
 
   return res.json({ data: null, message: 'Logged out successfully', error: null })
 })

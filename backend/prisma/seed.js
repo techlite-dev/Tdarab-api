@@ -21,7 +21,7 @@ async function main() {
   console.log(`    [${freePlan.level}] ${freePlan.name} — $${freePlan.price}`)
   console.log(`    [${paidPlan.level}] ${paidPlan.name} — $${paidPlan.price}`)
 
-  // ── Section 1 — السنة الأولى (level 1 — مجاني) ────────
+  // ── Section 1 — السنة الأولى (level 1) ────────────────
   const section1 = await prisma.section.upsert({
     where: { id: 1 },
     update: {},
@@ -35,14 +35,14 @@ async function main() {
     create: { name: 'التشريح', order: 1, sectionId: section1.id, requiredPlanLevel: 1 },
   })
 
-  // SubSection 1.2 — الفسيولوجيا (level 2 — مقفول للمجاني)
+  // SubSection 1.2 — الفسيولوجيا (level 2)
   const sub2 = await prisma.subSection.upsert({
     where: { id: 2 },
     update: {},
     create: { name: 'الفسيولوجيا', order: 2, sectionId: section1.id, requiredPlanLevel: 2 },
   })
 
-  // ── Section 2 — السنة الثانية (level 2 — مقفول للمجاني) ─
+  // ── Section 2 — السنة الثانية (level 2) ───────────────
   const section2 = await prisma.section.upsert({
     where: { id: 2 },
     update: {},
@@ -56,21 +56,37 @@ async function main() {
     create: { name: 'الباثولوجيا', order: 1, sectionId: section2.id, requiredPlanLevel: 2 },
   })
 
-  console.log(`✓ Sections & SubSections:`)
-  console.log(`    [id:${section1.id}] ${section1.name} — requiredLevel: ${section1.requiredPlanLevel}`)
-  console.log(`        [id:${sub1.id}] ${sub1.name} — requiredLevel: ${sub1.requiredPlanLevel}`)
-  console.log(`        [id:${sub2.id}] ${sub2.name} — requiredLevel: ${sub2.requiredPlanLevel} 🔒`)
-  console.log(`    [id:${section2.id}] ${section2.name} — requiredLevel: ${section2.requiredPlanLevel} 🔒`)
-  console.log(`        [id:${sub3.id}] ${sub3.name} — requiredLevel: ${sub3.requiredPlanLevel} 🔒`)
+  console.log(`✓ Sections & SubSections: 2 sections, 3 subsections`)
 
-  // ── Questions for sub1 (التشريح — level 1) ────────────
+  // ── Chapters ───────────────────────────────────────────
+  const ch1 = await prisma.chapter.upsert({
+    where: { id: 1 },
+    update: {},
+    create: { name: 'الجهاز الهيكلي', order: 1, subSectionId: sub1.id, requiredPlanLevel: 1 },
+  })
+
+  const ch2 = await prisma.chapter.upsert({
+    where: { id: 2 },
+    update: {},
+    create: { name: 'الجهاز الدوري', order: 1, subSectionId: sub2.id, requiredPlanLevel: 2 },
+  })
+
+  const ch3 = await prisma.chapter.upsert({
+    where: { id: 3 },
+    update: {},
+    create: { name: 'الأمراض الشائعة', order: 1, subSectionId: sub3.id, requiredPlanLevel: 2 },
+  })
+
+  console.log(`✓ Chapters: 3 chapters`)
+
+  // ── Questions ──────────────────────────────────────────
   const q1 = await prisma.question.upsert({
     where: { id: 1 },
     update: {},
     create: {
       text: 'كم عدد عظام جسم الإنسان البالغ؟',
       explanation: 'يحتوي جسم الإنسان البالغ على 206 عظمة.',
-      subSectionId: sub1.id,
+      chapterId: ch1.id,
       requiredPlanLevel: 1,
     },
   })
@@ -91,7 +107,7 @@ async function main() {
     create: {
       text: 'ما هو أصغر عظمة في جسم الإنسان؟',
       explanation: 'الركابة (Stapes) في الأذن الوسطى هي أصغر عظمة في الجسم.',
-      subSectionId: sub1.id,
+      chapterId: ch1.id,
       requiredPlanLevel: 1,
     },
   })
@@ -106,14 +122,13 @@ async function main() {
     ],
   })
 
-  // ── Question for sub2 (الفسيولوجيا — level 2) ─────────
   const q3 = await prisma.question.upsert({
     where: { id: 3 },
     update: {},
     create: {
       text: 'ما هو الضغط الطبيعي للدم؟',
       explanation: 'الضغط الطبيعي هو 120/80 ملم زئبق.',
-      subSectionId: sub2.id,
+      chapterId: ch2.id,
       requiredPlanLevel: 2,
     },
   })
@@ -128,14 +143,13 @@ async function main() {
     ],
   })
 
-  // ── Question for sub3 (الباثولوجيا — level 2) ─────────
   const q4 = await prisma.question.upsert({
     where: { id: 4 },
     update: {},
     create: {
       text: 'ما هو أكثر أنواع السرطان شيوعاً لدى الرجال؟',
       explanation: 'سرطان البروستاتا هو الأكثر شيوعاً لدى الرجال عالمياً.',
-      subSectionId: sub3.id,
+      chapterId: ch3.id,
       requiredPlanLevel: 2,
     },
   })
@@ -150,13 +164,9 @@ async function main() {
     ],
   })
 
-  console.log(`✓ Questions & Choices:`)
-  console.log(`    [id:${q1.id}] "${q1.text}" — sub: ${sub1.name} — level: ${q1.requiredPlanLevel} (4 choices)`)
-  console.log(`    [id:${q2.id}] "${q2.text}" — sub: ${sub1.name} — level: ${q2.requiredPlanLevel} (4 choices)`)
-  console.log(`    [id:${q3.id}] "${q3.text}" — sub: ${sub2.name} — level: ${q3.requiredPlanLevel} 🔒 (4 choices)`)
-  console.log(`    [id:${q4.id}] "${q4.text}" — sub: ${sub3.name} — level: ${q4.requiredPlanLevel} 🔒 (4 choices)`)
+  console.log(`✓ Questions & Choices: 4 questions, 16 choices`)
 
-  // ── Test Users (dev-only — never use these credentials in production) ──
+  // ── Test Users (dev-only — never use in production) ───
   const passwordHash = await bcrypt.hash('123456', 10)
 
   const testUser = await prisma.user.upsert({
@@ -186,42 +196,23 @@ async function main() {
   console.log(`    [${testUser.email}] — plan: ${paidPlan.name}`)
   console.log(`    [${freeUser.email}] — plan: ${freePlan.name}`)
 
-  // ── Activation Codes (for testing) ────────────────────
+  // ── Activation Codes ───────────────────────────────────
   const testCode = await prisma.activationCode.upsert({
     where: { code: 'TEST-CODE-2026' },
     update: {},
-    create: {
-      code: 'TEST-CODE-2026',
-      planLevel: 2,
-      durationDays: 30,
-      isUsed: false,
-      expiresAt: new Date('2030-01-01'),
-    },
+    create: { code: 'TEST-CODE-2026', planLevel: 2, durationDays: 30, isUsed: false, expiresAt: new Date('2030-01-01') },
   })
 
   const usedCode = await prisma.activationCode.upsert({
     where: { code: 'USED-CODE-2026' },
     update: {},
-    create: {
-      code: 'USED-CODE-2026',
-      planLevel: 2,
-      durationDays: 30,
-      isUsed: true,
-      usedByUserId: testUser.id,
-      usedAt: new Date(),
-    },
+    create: { code: 'USED-CODE-2026', planLevel: 2, durationDays: 30, isUsed: true, usedByUserId: testUser.id, usedAt: new Date() },
   })
 
   const expiredCode = await prisma.activationCode.upsert({
     where: { code: 'EXPR-CODE-2026' },
     update: {},
-    create: {
-      code: 'EXPR-CODE-2026',
-      planLevel: 2,
-      durationDays: 30,
-      isUsed: false,
-      expiresAt: new Date('2020-01-01'),
-    },
+    create: { code: 'EXPR-CODE-2026', planLevel: 2, durationDays: 30, isUsed: false, expiresAt: new Date('2020-01-01') },
   })
 
   console.log(`✓ Activation Codes:`)
@@ -229,28 +220,27 @@ async function main() {
   console.log(`    [${usedCode.code}] — used`)
   console.log(`    [${expiredCode.code}] — expired`)
 
-  // ── Sample Attempts (for stats demo) ─────────────────
+  // ── Sample Attempts ────────────────────────────────────
   const existingAttempts = await prisma.attempt.count({ where: { userId: testUser.id } })
 
   if (existingAttempts === 0) {
     await prisma.attempt.createMany({
       data: [
-        { userId: testUser.id, questionId: q1.id, selectedChoiceId: 1, isCorrect: true },   // 206 — correct
-        { userId: testUser.id, questionId: q2.id, selectedChoiceId: 5, isCorrect: false },  // المطرقة — wrong
-        { userId: testUser.id, questionId: q2.id, selectedChoiceId: 6, isCorrect: true },   // الركابة — correct
-        { userId: testUser.id, questionId: q3.id, selectedChoiceId: 9, isCorrect: true },   // 120/80 — correct
-        { userId: testUser.id, questionId: q3.id, selectedChoiceId: 10, isCorrect: false }, // 140/90 — wrong
-        { userId: testUser.id, questionId: q4.id, selectedChoiceId: 13, isCorrect: false }, // سرطان الرئة — wrong
+        { userId: testUser.id, questionId: q1.id, selectedChoiceId: 1, isCorrect: true },
+        { userId: testUser.id, questionId: q2.id, selectedChoiceId: 5, isCorrect: false },
+        { userId: testUser.id, questionId: q2.id, selectedChoiceId: 6, isCorrect: true },
+        { userId: testUser.id, questionId: q3.id, selectedChoiceId: 9, isCorrect: true },
+        { userId: testUser.id, questionId: q3.id, selectedChoiceId: 10, isCorrect: false },
+        { userId: testUser.id, questionId: q4.id, selectedChoiceId: 13, isCorrect: false },
       ],
     })
-
-    console.log(`✓ Sample Attempts: 6 attempts (3 correct, 3 wrong)`)
+    console.log(`✓ Sample Attempts: 6 attempts`)
   } else {
     console.log(`✓ Sample Attempts: skipped (${existingAttempts} already exist)`)
   }
 
   console.log(``)
-  console.log(`Seed complete ✓  (2 plans, 2 sections, 3 subsections, 4 questions, 16 choices, 3 activation codes, 2 users, 6 attempts)`)
+  console.log(`Seed complete ✓`)
 }
 
 main()

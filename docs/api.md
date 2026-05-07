@@ -1,29 +1,43 @@
 # TDARAB API Documentation
 
-**Base URL:** `https://api.example.com`  
-**Version:** 1.1.0  
-**Last Updated:** April 19, 2026  
+**Base URL:** `https://api.tadarrabmed.com`
+**Version:** 1.2.0
+**Last Updated:** May 4, 2026  
 **Format:** All responses follow `{ data, message, error }`
 
 ---
 
 ## Test Credentials
 
-Use these accounts during development. Both share the same password: `123456`
+All seed accounts share the same password: `123456`
 
-| Email | Plan | Level | Use Case |
-|-------|------|-------|----------|
-| test@example.com | خطة أولى | 2 | Full access - can view all sections and questions |
-| free@example.com | مجاني | 1 | Limited access - test locked content and upgrade flow |
+**Key test accounts:**
+
+| Email | Name | Plan | Level | Use Case |
+|-------|------|------|-------|----------|
+| student.free@example.com | سامر العلي | مجاني | 1 | Free tier - test locked content and upgrade flow |
+| student.basic@example.com | لينا حداد | basic | 2 | Active basic subscriber (expires in 30 days) |
+| student.pro@example.com | يوسف الخوري | pro | 3 | Active pro subscriber (expires in 60 days) |
+| student.premium@example.com | رنا منصور | premium | 4 | Full access - longest expiry (365 days) |
+| student.expired@example.com | كرم سليمان | مجاني | 1 | Was paid - subscription expired 10 days ago |
+| student.new@example.com | مايا حلاق | مجاني | 1 | Just registered - zero attempts |
+
+> 12 total seed users exist - see `backend/prisma/seeds/users.js` for the full list.
 
 **Test Activation Codes:**
 
-| Code | Status | Use Case |
-|------|--------|----------|
-| TEST-CODE-2026 | ✅ Valid | Activate to upgrade free user to level 2 |
-| TEST-CODE-2026-2 | ✅ Valid | Second valid code — useful for testing activation after logout/re-login or a second user |
-| USED-CODE-2026 | ❌ Used | Test "Code already used" error |
-| EXPR-CODE-2026 | ❌ Expired | Test "Code has expired" error |
+| Code | Plan Level | Duration | Status | Use Case |
+|------|-----------|----------|--------|----------|
+| TEST-BASIC-7D-01 | 2 (basic) | 7 days | ✅ Valid | Quick upgrade test |
+| TEST-BASIC-30D-01 | 2 (basic) | 30 days | ✅ Valid | Standard basic upgrade |
+| TEST-BASIC-30D-02 | 2 (basic) | 30 days | ✅ Valid | Second valid code - test concurrent activation |
+| TEST-PRO-30D-01 | 3 (pro) | 30 days | ✅ Valid | Upgrade to pro |
+| TEST-PREM-365D-01 | 4 (premium) | 365 days | ✅ Valid | Upgrade to premium |
+| TEST-BASIC-NEAREXP | 2 (basic) | 30 days | ✅ Valid (expires in 3 days) | Test near-expiry warning UI |
+| TEST-BASIC-USED-01 | 2 (basic) | 30 days | ❌ Used | Test "Code already used" error |
+| TEST-PRO-USED-01 | 3 (pro) | 60 days | ❌ Used | Test "Code already used" error |
+| TEST-BASIC-EXPIRED | 2 (basic) | 30 days | ❌ Expired | Test "Code has expired" error |
+| TEST-PRO-EXPIRED | 3 (pro) | 30 days | ❌ Expired | Test "Code has expired" error |
 
 > ⚠️ **Dev only:** These credentials are for development and testing only. Never use them in production.
 
@@ -167,6 +181,7 @@ Authenticate a user and receive access + refresh tokens.
 Get a new access token using a valid refresh token.
 
 **Auth:** None
+**Rate Limit:** 10 requests per 15 minutes per IP
 
 **Request Body:**
 
@@ -192,14 +207,15 @@ Get a new access token using a valid refresh token.
 | 401 | `Invalid refresh token` | Token not found in DB (already logged out or forged) |
 | 401 | `Refresh token expired` | Token row exists in DB but its `expiresAt` is in the past. The row is deleted server-side; the client **must force a full re-login** and not retry `/refresh`. |
 | 401 | `Invalid or expired refresh token` | JWT signature invalid or malformed payload |
+| 429 | `Too many token refresh attempts, please try again later` | Rate limit exceeded (10 req/15 min) |
 
 ---
 
 #### POST /api/auth/logout
 
-Invalidate a refresh token (remove from DB).
+Invalidate a refresh token (remove from DB). Requires authentication - only the token owner can log out.
 
-**Auth:** None
+**Auth:** 🔒 Required
 
 **Request Body:**
 
@@ -222,6 +238,8 @@ Invalidate a refresh token (remove from DB).
 | Status | Error | When |
 |--------|-------|------|
 | 400 | `refreshToken is required` | Missing field |
+| 401 | `Unauthorized` | No or invalid access token |
+| 403 | `Token does not belong to this user` | Token belongs to a different user |
 
 ---
 
@@ -229,7 +247,7 @@ Invalidate a refresh token (remove from DB).
 
 #### GET /api/sections
 
-Get all sections with their subsections and user progress stats. Locked sections/subsections return minimal data.
+Get all sections with their subsections. Locked items return minimal data. Each unlocked subsection includes `totalChapters` - for per-chapter stats, use `GET /api/sections/:id/subsections`.
 
 **Auth:** 🔒 Required
 
@@ -251,8 +269,7 @@ Get all sections with their subsections and user progress stats. Locked sections
           "order": 1,
           "requiredPlanLevel": 1,
           "locked": false,
-          "totalQuestions": 2,
-          "userStats": { "answered": 3, "correct": 2 }
+          "totalChapters": 3
         },
         {
           "id": 2,
@@ -282,7 +299,7 @@ Get all sections with their subsections and user progress stats. Locked sections
 
 #### GET /api/sections/:id/subsections
 
-Get subsections for a specific section with progress stats.
+Get subsections for a specific section with chapters and progress stats.
 
 **Auth:** 🔒 Required
 
@@ -304,8 +321,24 @@ Get subsections for a specific section with progress stats.
       "sectionId": 1,
       "requiredPlanLevel": 1,
       "locked": false,
-      "totalQuestions": 2,
-      "userStats": { "answered": 3, "correct": 2 }
+      "totalChapters": 3,
+      "chapters": [
+        {
+          "id": 1,
+          "name": "تشريح الطرف العلوي",
+          "order": 1,
+          "subSectionId": 1,
+          "requiredPlanLevel": 1,
+          "locked": false,
+          "totalQuestions": 15,
+          "userStats": { "answered": 10, "correct": 8 }
+        },
+        {
+          "id": 2,
+          "locked": true,
+          "requiredPlanLevel": 2
+        }
+      ]
     }
   ],
   "message": null,
@@ -323,9 +356,9 @@ Get subsections for a specific section with progress stats.
 
 ---
 
-#### GET /api/subsections/:id/questions
+#### GET /api/chapters/subsection/:id
 
-Get questions for a specific subsection. Locked questions return minimal data. `isCorrect` is **never** included in choices.
+Get chapters for a specific subsection with progress stats.
 
 **Auth:** 🔒 Required
 
@@ -342,14 +375,62 @@ Get questions for a specific subsection. Locked questions return minimal data. `
   "data": [
     {
       "id": 1,
-      "text": "كم عدد عظام جسم الإنسان البالغ؟",
+      "name": "تشريح الطرف العلوي",
+      "order": 1,
+      "subSectionId": 1,
+      "requiredPlanLevel": 1,
+      "locked": false,
+      "totalQuestions": 15,
+      "userStats": { "answered": 10, "correct": 8 }
+    },
+    {
+      "id": 2,
+      "locked": true,
+      "requiredPlanLevel": 2
+    }
+  ],
+  "message": null,
+  "error": null
+}
+```
+
+**Error Responses:**
+
+| Status | Error | When |
+|--------|-------|------|
+| 401 | `Unauthorized` | No or invalid token |
+| 403 | `Access denied` | User plan level too low |
+| 404 | `SubSection not found` | Invalid subsection ID |
+
+---
+
+#### GET /api/chapters/:id/questions
+
+Get questions for a specific chapter. Locked questions return minimal data. `isCorrect` is **never** included in choices.
+
+**Auth:** 🔒 Required
+
+**Path Parameters:**
+
+| Param | Type | Description |
+|-------|------|-------------|
+| id | integer | Chapter ID |
+
+**Success Response (200):**
+
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "text": "كم عدد عظام الطرف العلوي؟",
       "imageUrl": null,
       "requiredPlanLevel": 1,
       "choices": [
-        { "id": 1, "text": "206" },
-        { "id": 2, "text": "208" },
-        { "id": 3, "text": "210" },
-        { "id": 4, "text": "212" }
+        { "id": 1, "text": "32" },
+        { "id": 2, "text": "206" },
+        { "id": 3, "text": "64" },
+        { "id": 4, "text": "126" }
       ]
     },
     {
@@ -368,8 +449,8 @@ Get questions for a specific subsection. Locked questions return minimal data. `
 | Status | Error | When |
 |--------|-------|------|
 | 401 | `Unauthorized` | No or invalid token |
-| 403 | `Access denied` | User plan level too low for subsection |
-| 404 | `SubSection not found` | Invalid subsection ID |
+| 403 | `Access denied` | User plan level too low for chapter |
+| 404 | `Chapter not found` | Invalid chapter ID |
 
 ---
 
@@ -403,6 +484,8 @@ Submit an answer to a question. Returns whether correct, the explanation, and th
 }
 ```
 
+> When the answer is wrong, `isCorrect` is `false` and `message` is `"Wrong answer"`. The `correctChoice` and `explanation` are always returned regardless.
+
 **Error Responses:**
 
 | Status | Error | When |
@@ -410,7 +493,7 @@ Submit an answer to a question. Returns whether correct, the explanation, and th
 | 400 | `questionId and selectedChoiceId are required` | Missing fields |
 | 400 | `Invalid choice for this question` | Choice doesn't belong to question |
 | 401 | `Unauthorized` | No or invalid token |
-| 403 | `Access denied` | User plan level too low |
+| 403 | `Access denied` | User plan level too low - response also includes `locked: true` and `requiredPlanLevel` |
 | 404 | `Question not found` | Invalid question ID |
 
 ---
@@ -449,7 +532,9 @@ Get the current authenticated user's profile.
 
 #### GET /api/plans
 
-Get all available plans. No authentication required.
+Get all active plans with full content tree per plan level. No authentication required.
+
+Each plan includes all content accessible at that level (`requiredPlanLevel <= plan.level`): sections, subsections, chapters, and question counts. Use this endpoint to build a pricing/features page on the frontend.
 
 **Auth:** None
 
@@ -458,13 +543,45 @@ Get all available plans. No authentication required.
 ```json
 {
   "data": [
-    { "id": 1, "name": "مجاني", "level": 1, "price": 0, "currency": "USD" },
-    { "id": 2, "name": "خطة أولى", "level": 2, "price": 9.99, "currency": "USD" }
+    {
+      "id": 1,
+      "name": "مجاني",
+      "level": 1,
+      "price": 0,
+      "currency": "USD",
+      "content": {
+        "sectionsCount": 3,
+        "subSectionsCount": 8,
+        "chaptersCount": 24,
+        "questionsCount": 180,
+        "sections": [
+          {
+            "id": 1,
+            "name": "السنة الأولى",
+            "description": null,
+            "subSectionsCount": 2,
+            "subSections": [
+              {
+                "id": 1,
+                "name": "التشريح",
+                "description": null,
+                "chaptersCount": 3,
+                "chapters": [
+                  { "id": 1, "name": "الجهاز الهيكلي", "description": null, "questionsCount": 32 }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
   ],
   "message": null,
   "error": null
 }
 ```
+
+**Last Updated:** May 7, 2026 - Added `content` tree to each plan.
 
 ---
 
@@ -509,7 +626,7 @@ Activate a subscription code. Upgrades the user's plan and creates a subscriptio
 }
 ```
 
-> 🔒 **Concurrency guarantee:** If the same code is activated by multiple concurrent requests, exactly one succeeds with `200` and all others receive `400 Code already used`. The activation is atomic — no duplicate subscriptions are ever created.
+> **Concurrency guarantee:** If the same code is activated by multiple concurrent requests, exactly one succeeds with `200` and all others receive `400 Code already used`. The activation is atomic - no duplicate subscriptions are ever created.
 
 **Error Responses:**
 
@@ -620,8 +737,19 @@ Health check endpoint.
 
 ```json
 {
-  "data": { "status": "ok" },
-  "message": "Server is running"
+  "data": { "status": "ok", "db": "ok" },
+  "message": "Server is running",
+  "error": null
+}
+```
+
+**Error Response (503) - DB unreachable:**
+
+```json
+{
+  "data": { "status": "ok", "db": "unreachable" },
+  "message": null,
+  "error": "Database unreachable"
 }
 ```
 
@@ -631,22 +759,24 @@ Health check endpoint.
 
 | Code | Meaning |
 |------|---------|
-| 400 | Bad Request  - missing or invalid fields, or malformed JSON body |
-| 401 | Unauthorized  - missing or expired token |
-| 403 | Forbidden  - insufficient plan level |
-| 404 | Not Found  - resource doesn't exist |
-| 409 | Conflict  - duplicate resource (e.g. email) |
-| 413 | Payload Too Large  - request body exceeds 10 kb |
-| 429 | Too Many Requests  - rate limit exceeded |
-| 500 | Internal Server Error  - unexpected server-side failure |
+| 400 | Bad Request - missing or invalid fields, or malformed JSON body |
+| 401 | Unauthorized - missing or expired token |
+| 403 | Forbidden - insufficient plan level |
+| 404 | Not Found - resource doesn't exist |
+| 409 | Conflict - duplicate resource (e.g. email) |
+| 413 | Payload Too Large - request body exceeds 10 kb |
+| 429 | Too Many Requests - rate limit exceeded |
+| 500 | Internal Server Error - unexpected server-side failure |
 
 ---
 
 ## Notes
 
-- `isCorrect` is **never** sent to the client in question choices  - only revealed after submitting an attempt
+- `isCorrect` is **never** sent to the client in question choices - only revealed after submitting an attempt
 - `passwordHash` is **never** included in any response
+- **Effective Plan Level:** Content access uses `effectivePlanLevel = max(self, all ancestors)`. A chapter with `requiredPlanLevel: 1` inside a subsection with `requiredPlanLevel: 2` effectively requires level 2. The API returns the computed effective level in `requiredPlanLevel`.
 - Expired plans are automatically downgraded to free (level 1) daily at **00:00 Asia/Damascus**
-- **Plan expiry is enforced on a calendar-day boundary (by design).** A user whose subscription ends mid-day (for example at 14:00) remains on their paid plan until the next daily cron run at 00:00 Asia/Damascus. This is an intentional product policy — **do not treat a user remaining on a paid plan a few hours after their `planExpiresAt` timestamp as a bug**.
-- Refresh tokens are stored server-side in the database  - stateless refresh is not supported
+- **Plan expiry uses a calendar-day boundary (by design).** A user whose subscription ends mid-day (e.g. at 14:00) stays on their paid plan until the next cron run at 00:00 Asia/Damascus. This is intentional product policy - do not treat it as a bug.
+- Refresh tokens are stored server-side in the database - stateless refresh is not supported
 - On `POST /api/auth/refresh`, the error `Refresh token expired` is **distinct** from `Invalid or expired refresh token`. The former means the server deleted the stored row and the client must force a full re-login. The latter means the JWT signature/payload failed verification.
+- `POST /api/auth/logout` requires a valid access token. Only the token owner can invalidate their refresh token.

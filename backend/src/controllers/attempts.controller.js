@@ -1,6 +1,8 @@
 const prisma = require('../lib/prisma')
 const asyncHandler = require('../utils/asyncHandler')
 
+const MAX_ATTEMPTS_PER_QUESTION = 5
+
 const submitAttempt = asyncHandler(async (req, res) => {
   const { questionId, selectedChoiceId } = req.body
   const userId = req.user.id
@@ -43,13 +45,23 @@ const submitAttempt = asyncHandler(async (req, res) => {
   const correctChoice = question.choices.find((c) => c.isCorrect)
   const isCorrect = selectedChoice.isCorrect
 
-  const attempt = await prisma.attempt.create({
-    data: {
-      userId,
-      questionId,
-      selectedChoiceId,
-      isCorrect,
-    },
+  const attempt = await prisma.$transaction(async (tx) => {
+    const newAttempt = await tx.attempt.create({
+      data: { userId, questionId, selectedChoiceId, isCorrect },
+    })
+
+    const existing = await tx.attempt.findMany({
+      where: { userId, questionId },
+      orderBy: { answeredAt: 'desc' },
+      select: { id: true },
+    })
+
+    if (existing.length > MAX_ATTEMPTS_PER_QUESTION) {
+      const idsToDelete = existing.slice(MAX_ATTEMPTS_PER_QUESTION).map((a) => a.id)
+      await tx.attempt.deleteMany({ where: { id: { in: idsToDelete } } })
+    }
+
+    return newAttempt
   })
 
   return res.status(201).json({

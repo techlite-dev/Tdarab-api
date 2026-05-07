@@ -9,8 +9,12 @@ const getUserStats = asyncHandler(async (req, res) => {
     include: {
       question: {
         include: {
-          subSection: {
-            include: { section: true },
+          chapter: {
+            include: {
+              subSection: {
+                include: { section: true },
+              },
+            },
           },
         },
       },
@@ -24,7 +28,7 @@ const getUserStats = asyncHandler(async (req, res) => {
   const groupMap = {}
 
   for (const attempt of attempts) {
-    const sub = attempt.question.subSection
+    const sub = attempt.question.chapter.subSection
     if (!groupMap[sub.id]) {
       groupMap[sub.id] = {
         id: sub.id,
@@ -62,7 +66,7 @@ const getSubSectionStats = asyncHandler(async (req, res) => {
   const attempts = await prisma.attempt.findMany({
     where: {
       userId,
-      question: { subSectionId },
+      question: { chapter: { subSectionId } },
     },
     include: {
       question: true,

@@ -39,6 +39,7 @@ CREATE TABLE "RefreshToken" (
 CREATE TABLE "Section" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "description" TEXT,
     "order" INTEGER NOT NULL,
     "requiredPlanLevel" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -50,6 +51,7 @@ CREATE TABLE "Section" (
 CREATE TABLE "SubSection" (
     "id" SERIAL NOT NULL,
     "name" TEXT NOT NULL,
+    "description" TEXT,
     "order" INTEGER NOT NULL,
     "sectionId" INTEGER NOT NULL,
     "requiredPlanLevel" INTEGER NOT NULL DEFAULT 1,
@@ -59,12 +61,25 @@ CREATE TABLE "SubSection" (
 );
 
 -- CreateTable
+CREATE TABLE "Chapter" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "description" TEXT,
+    "order" INTEGER NOT NULL,
+    "subSectionId" INTEGER NOT NULL,
+    "requiredPlanLevel" INTEGER NOT NULL DEFAULT 1,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Chapter_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Question" (
     "id" SERIAL NOT NULL,
     "text" TEXT NOT NULL,
     "imageUrl" TEXT,
     "explanation" TEXT NOT NULL,
-    "subSectionId" INTEGER NOT NULL,
+    "chapterId" INTEGER NOT NULL,
     "requiredPlanLevel" INTEGER NOT NULL DEFAULT 1,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
@@ -130,10 +145,22 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "RefreshToken_token_key" ON "RefreshToken"("token");
 
 -- CreateIndex
+CREATE INDEX "RefreshToken_userId_idx" ON "RefreshToken"("userId");
+
+-- CreateIndex
+CREATE INDEX "RefreshToken_expiresAt_idx" ON "RefreshToken"("expiresAt");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "ActivationCode_code_key" ON "ActivationCode"("code");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Subscription_activationCodeId_key" ON "Subscription"("activationCodeId");
+
+-- CreateIndex
+CREATE INDEX "Attempt_userId_idx" ON "Attempt"("userId");
+
+-- CreateIndex
+CREATE INDEX "Attempt_userId_questionId_idx" ON "Attempt"("userId", "questionId");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_planId_fkey" FOREIGN KEY ("planId") REFERENCES "Plan"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -151,7 +178,13 @@ ALTER TABLE "SubSection" ADD CONSTRAINT "SubSection_sectionId_fkey" FOREIGN KEY 
 ALTER TABLE "SubSection" ADD CONSTRAINT "SubSection_requiredPlanLevel_fkey" FOREIGN KEY ("requiredPlanLevel") REFERENCES "Plan"("level") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Question" ADD CONSTRAINT "Question_subSectionId_fkey" FOREIGN KEY ("subSectionId") REFERENCES "SubSection"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_subSectionId_fkey" FOREIGN KEY ("subSectionId") REFERENCES "SubSection"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_requiredPlanLevel_fkey" FOREIGN KEY ("requiredPlanLevel") REFERENCES "Plan"("level") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Question" ADD CONSTRAINT "Question_chapterId_fkey" FOREIGN KEY ("chapterId") REFERENCES "Chapter"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Question" ADD CONSTRAINT "Question_requiredPlanLevel_fkey" FOREIGN KEY ("requiredPlanLevel") REFERENCES "Plan"("level") ON DELETE RESTRICT ON UPDATE CASCADE;
