@@ -72,9 +72,9 @@ npm start      # Production
 
 ## API Documentation
 
-Interactive documentation available at `/docs` when `ENABLE_DOCS=true`.
+Full interactive documentation: [docs/index.html](docs/index.html)
 
-Static documentation: [docs/index.html](docs/index.html)
+**Version:** 1.3.0 - See [docs/api.md](docs/api.md) for the full reference.
 
 ## API Endpoints
 
@@ -119,6 +119,7 @@ All responses follow this structure:
 - `isCorrect` is **never** included in question choices — only revealed after submitting an attempt
 - `passwordHash` is **never** included in any response
 - Refresh tokens are stored server-side in the database
+- Each question returns between **2 and 5 choices** - empty choices are filtered server-side and never returned
 
 ## Deployment
 
