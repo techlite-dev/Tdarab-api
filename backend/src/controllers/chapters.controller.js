@@ -174,6 +174,7 @@ const getChapterQuestions = asyncHandler(async (req, res) => {
       imageUrl: true,
       requiredPlanLevel: true,
       choices: {
+        where: { text: { not: '' } },
         select: {
           id: true,
           text: true,

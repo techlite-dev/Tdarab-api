@@ -94,7 +94,7 @@
       <p>Complete REST API documentation for the medical education platform. Built for frontend developers.</p>
       <div class="intro-meta">
         <div class="intro-meta-item"><strong>Base URL:</strong> https://api.tadarrabmed.com</div>
-        <div class="intro-meta-item"><strong>Version:</strong> 1.2.0</div>
+        <div class="intro-meta-item"><strong>Version:</strong> 1.3.0</div>
         <div class="intro-meta-item"><strong>Last Updated:</strong> May 7, 2026</div>
         <div class="intro-meta-item"><strong>Format:</strong> JSON</div>
       </div>
@@ -559,7 +559,7 @@
         <span class="endpoint-path">/api/chapters/:id/questions</span>
         <div class="endpoint-badges"><span class="badge badge-auth">🔒 Auth</span></div>
       </div>
-      <p class="endpoint-desc">Get questions for a specific chapter. <strong>isCorrect is never included in choices</strong> - only revealed after submitting an attempt.</p>
+      <p class="endpoint-desc">Get questions for a specific chapter. <strong>isCorrect is never included in choices</strong> - only revealed after submitting an attempt. Each question returns between <strong>2 and 5 choices</strong> - empty choices are filtered server-side and never returned.</p>
 
       <div class="code-label">Path Parameters</div>
       <table class="param-table">
@@ -966,6 +966,9 @@
     <h2 class="section-heading">Important Notes</h2>
     <div class="note-card danger">
       <strong>Security:</strong> <code>isCorrect</code> is <strong>never</strong> sent in question choices - only revealed after submitting an attempt.
+    </div>
+    <div class="note-card">
+      <strong>Flexible choices:</strong> Each question has between <strong>2 and 5 choices</strong>. Empty choices are filtered server-side and never included in responses.
     </div>
     <div class="note-card danger">
       <strong>Security:</strong> <code>passwordHash</code> is <strong>never</strong> included in any API response.

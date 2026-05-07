@@ -1,8 +1,8 @@
 # TDARAB API Documentation
 
 **Base URL:** `https://api.tadarrabmed.com`
-**Version:** 1.2.0
-**Last Updated:** May 4, 2026  
+**Version:** 1.3.0
+**Last Updated:** May 7, 2026  
 **Format:** All responses follow `{ data, message, error }`
 
 ---
@@ -406,7 +406,7 @@ Get chapters for a specific subsection with progress stats.
 
 #### GET /api/chapters/:id/questions
 
-Get questions for a specific chapter. Locked questions return minimal data. `isCorrect` is **never** included in choices.
+Get questions for a specific chapter. Locked questions return minimal data. `isCorrect` is **never** included in choices. Each question returns between 2 and 5 choices (empty choices are filtered server-side).
 
 **Auth:** 🔒 Required
 
@@ -431,7 +431,8 @@ Get questions for a specific chapter. Locked questions return minimal data. `isC
         { "id": 2, "text": "206" },
         { "id": 3, "text": "64" },
         { "id": 4, "text": "126" }
-      ]
+      ],
+      "_note": "choices count is 2-5 depending on the question"
     },
     {
       "id": 3,
@@ -773,6 +774,7 @@ Health check endpoint.
 ## Notes
 
 - `isCorrect` is **never** sent to the client in question choices - only revealed after submitting an attempt
+- Each question has between **2 and 5 choices**. Empty choices are filtered server-side and never returned.
 - `passwordHash` is **never** included in any response
 - **Effective Plan Level:** Content access uses `effectivePlanLevel = max(self, all ancestors)`. A chapter with `requiredPlanLevel: 1` inside a subsection with `requiredPlanLevel: 2` effectively requires level 2. The API returns the computed effective level in `requiredPlanLevel`.
 - Expired plans are automatically downgraded to free (level 1) daily at **00:00 Asia/Damascus**
